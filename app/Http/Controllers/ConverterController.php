@@ -4,15 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class ConverterController extends Controller
 {
     public function index(Request $request)
     {
-        if(is_numeric( $request->answer)){
-           $data['conversion'] = $this->convertToWords($request->answer);
-        }
-        else {
+        if (is_numeric($request->answer)) {
+            $data['conversion'] = $this->convertToWords($request->answer);
+        } else {
             $data['conversion'] = $this->convertToNumbers($request->answer);
         }
 
@@ -28,8 +28,82 @@ class ConverterController extends Controller
      *
      * @return string
      */
-    private function convertToWords(string $val) {
-        // some code here
+    private function convertToWords(string $val)
+    {
+        $ones = array(
+            1 => "one",
+            2 => "two",
+            3 => "three",
+            4 => "four",
+            5 => "five",
+            6 => "six",
+            7 => "seven",
+            8 => "eight",
+            9 => "nine",
+            10 => "ten",
+            11 => "eleven",
+            12 => "twelve",
+            13 => "thirteen",
+            14 => "fourteen",
+            15 => "fifteen",
+            16 => "sixteen",
+            17 => "seventeen",
+            18 => "eighteen",
+            19 => "nineteen"
+        );
+        $tens = array(
+            1 => "ten",
+            2 => "twenty",
+            3 => "thirty",
+            4 => "forty",
+            5 => "fifty",
+            6 => "sixty",
+            7 => "seventy",
+            8 => "eighty",
+            9 => "ninety"
+        );
+        $hundreds = array(
+            "hundred",
+            "thousand",
+            "million",
+            "billion",
+            "trillion",
+            "quadrillion"
+        );
+
+        $num = (float) $val;
+        $num = number_format($num, 2, ".", ",");
+        $num_arr = explode(".", $num);
+        $wholenum = $num_arr[0];
+        $decnum = $num_arr[1];
+        $whole_arr = array_reverse(explode(",", $wholenum));
+        krsort($whole_arr);
+        $rettxt = "";
+        foreach ($whole_arr as $key => $i) {
+            if ($i < 20) {
+                $rettxt .= $ones[$i];
+            } elseif ($i < 100) {
+                $rettxt .= $tens[substr($i, 0, 1)];
+                $rettxt .= " " . $ones[substr($i, 1, 1)];
+            } else {
+                $rettxt .= $ones[substr($i, 0, 1)] . " " . $hundreds[0];
+                $rettxt .= " " . $tens[substr($i, 1, 1)];
+                $rettxt .= " " . $ones[substr($i, 2, 1)];
+            }
+            if ($key > 0) {
+                $rettxt .= " " . $hundreds[$key] . " ";
+            }
+        }
+        if ($decnum > 0) {
+            $rettxt .= " and ";
+            if ($decnum < 20) {
+                $rettxt .= $ones[$decnum];
+            } elseif ($decnum < 100) {
+                $rettxt .= $tens[substr($decnum, 0, 1)];
+                $rettxt .= " " . $ones[substr($decnum, 1, 1)];
+            }
+        }
+        return $rettxt;
     }
 
     /**
@@ -37,13 +111,14 @@ class ConverterController extends Controller
      *
      * @return int
      */
-    private function convertToNumbers(string $val) {
+    private function convertToNumbers(string $val): int
+    {
 
         // convert corresponding text to symbols (copied from internet didnt want to type the whole array too time consuming).
+        $val = strtolower($val);
         $data = strtr(
             $val,
             array(
-                'zero'      => '0',
                 'one'       => '1',
                 'two'       => '2',
                 'three'     => '3',
@@ -75,6 +150,7 @@ class ConverterController extends Controller
                 'thousand'  => '1000',
                 'million'   => '1000000',
                 'billion'   => '1000000000',
+                'trillion'   => '1000000000000',
                 'and'       => '', // eliminates end to end result
                 '-'         => ' ', // catches hyphen and converts it to space
             )
@@ -91,11 +167,10 @@ class ConverterController extends Controller
         $segmentArray = [];
         $count = 0;
 
-        foreach($parts as $index => $part) {
-            if($part < 1000)
-            {
+        foreach ($parts as $index => $part) {
+            if ($part < 1000) {
                 // this segment is for 10s and 1s
-                if($part < 100) {
+                if ($part < 100) {
                     $count += $part;
                 }
                 // this segment is for hundreds
@@ -110,7 +185,7 @@ class ConverterController extends Controller
             }
 
             // if last part should be placed on array
-            if(count($parts) - 1 === $index) {
+            if (count($parts) - 1 === $index) {
                 $segmentArray[] = $count;
             }
         }
@@ -121,9 +196,11 @@ class ConverterController extends Controller
     /**
      * @param int $val
      *
-     * @return int
+     * @return float
      */
-    private function convertUsingAPI(int $val) {
+    private function convertUsingAPI(int $val): float
+    {
+
         $response =  HTTP::withHeaders([
             'apikey' => env('CONVERTER_API_KEY')
         ])->get('https://api.apilayer.com/fixer/convert', [
@@ -135,4 +212,3 @@ class ConverterController extends Controller
         return $response->result;
     }
 }
-

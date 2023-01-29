@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>Chanz IT exam</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;600&display=swap" rel="stylesheet">
@@ -81,7 +81,7 @@
                 @isset($conversion)
                     <div class="container border">
                         <div class="container">
-                            Value: <strong> PHP {{ number_format($conversion, 2) }} </strong> <br/>
+                            Value: <strong> {{ is_numeric($conversion) ? "PHP ". number_format($conversion, 2) : ucwords($conversion) }} </strong> <br/>
                             To USD: <strong> ${{ number_format($currency, 2) }} </strong> <br/>
                         </div>
                     </div>
