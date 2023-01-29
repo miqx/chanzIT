@@ -51,6 +51,16 @@
             .m-b-md {
                 margin-bottom: 30px;
             }
+
+            .container {
+                margin: 20px;
+                padding 20px
+            }
+
+            .border {
+                border: 1px #636b6f solid;
+                border-radius: 2px;
+            }
         </style>
     </head>
     <body>
@@ -67,6 +77,15 @@
                     <br />
                     <input type="submit" />
                 </form>
+
+                @isset($conversion)
+                    <div class="container border">
+                        <div class="container">
+                            Value: <strong> PHP {{ number_format($conversion, 2) }} </strong> <br/>
+                            To USD: <strong> ${{ number_format($currency, 2) }} </strong> <br/>
+                        </div>
+                    </div>
+                @endisset
             </div>
         </div>
     </body>

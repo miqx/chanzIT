@@ -3,12 +3,24 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class ConverterController extends Controller
 {
     public function index(Request $request)
     {
-        return (is_numeric( $request->answer)) ? $this->convertToWords($request->answer) : $this->convertToNumbers($request->answer);
+        if(is_numeric( $request->answer)){
+           $data['conversion'] = $this->convertToWords($request->answer);
+        }
+        else {
+            $data['conversion'] = $this->convertToNumbers($request->answer);
+        }
+
+        $data['currency'] = is_numeric($data['conversion']) ? $data['conversion'] : $this->convertToNumbers($data['conversion']);
+
+        $data['currency'] = $this->convertUsingAPI($data['currency']);
+
+        return view('welcome', $data);
     }
 
     /**
@@ -27,7 +39,7 @@ class ConverterController extends Controller
      */
     private function convertToNumbers(string $val) {
 
-        // convert corresponding text to symbols (copied from internet too lazy to type).
+        // convert corresponding text to symbols (copied from internet didnt want to type the whole array too time consuming).
         $data = strtr(
             $val,
             array(
@@ -64,6 +76,7 @@ class ConverterController extends Controller
                 'million'   => '1000000',
                 'billion'   => '1000000000',
                 'and'       => '', // eliminates end to end result
+                '-'         => ' ', // catches hyphen and converts it to space
             )
         );
 
@@ -106,20 +119,20 @@ class ConverterController extends Controller
     }
 
     /**
-     * @param string $val - string that is in aphabet format
+     * @param int $val
      *
      * @return int
      */
-    private function convertUsingAPI(string $val) {
-        // some code here
-    }
+    private function convertUsingAPI(int $val) {
+        $response =  HTTP::withHeaders([
+            'apikey' => env('CONVERTER_API_KEY')
+        ])->get('https://api.apilayer.com/fixer/convert', [
+            'from' => 'PHP',
+            'to' => 'USD',
+            'amount' => $val,
+        ])->object();
 
-    /**
-     * @param string $val - string that is in aphabet format
-     *
-     * @return int
-     */
-    private function wordValue(string $val) {
-
+        return $response->result;
     }
 }
+
